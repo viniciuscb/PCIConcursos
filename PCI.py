@@ -14,6 +14,7 @@ def exam_region(source_code, region):
 
     # Type of information
     name = ['Concurso']
+    uf = ['UF']
     vagas = ['Vagas']
     nivel = ['Nível']
     salario = ['Salário Até']
@@ -124,15 +125,16 @@ def exam_region(source_code, region):
 
 
     # Web-scraping
-    concursos_tag = source_code_str[initial_tag:final_tag]
+    concursos_tag = source_code_str if region == 'all' else source_code_str[initial_tag:final_tag]
     concursos_tag = BeautifulSoup(concursos_tag, "html.parser")
 
     for line in concursos_tag.findAll(class_='ca'):
         name.append(line.find('a').text.strip())  # Institution's name
+        uf.append('')
         link.append(line.find('a', href=True)['href'])  # Link
         vagas.append(''.join(re.findall('(\d*) vaga', str(line.find(class_='cd')))))  # Jobs
         nivel.append('/'.join(re.findall('Superior|Médio', str(line.find(class_='cd')))))  # Education
-        salario.append(''.join(re.findall('R\$ *\d*\.*\d*\,*\d*', str(line.find(class_='cd')))))  # Salary
+        salario.append(''.join(re.findall('R\$ *\d*\.*\d*\,*\d*', str(line.find(class_='cd')))).replace('.','').replace('R$','').strip())  # Salary
         inscricao.append(''.join(re.findall('\d+/\d+/\d+', str(line.find(class_='ce'))))) # Subscription date
 
     # Merge lists
@@ -167,8 +169,8 @@ def new_exam():
         os.remove('ConcursosAtivos.csv')
         os.rename('ConcursosAtivos' + date_now + '.csv', 'ConcursosAtivos.csv')
 
-    if len(novos_concursos) > 1:
-        ctypes.windll.user32.MessageBoxW(0, '\n'.join(novos_concursos), "Novo Concurso", 1)
+    #if len(novos_concursos) > 1:
+    #    ctypes.windll.user32.MessageBoxW(0, '\n'.join(novos_concursos), "Novo Concurso", 1)
 
 
 if __name__ == '__main__':
@@ -187,7 +189,7 @@ if __name__ == '__main__':
     # state = state1 + state2[1:]
 
     # Extract one state
-    state = exam_region(soup, 'SP')
+    state = exam_region(soup, 'all')
 
     # Save as CSV
     df = pd.DataFrame(state)
